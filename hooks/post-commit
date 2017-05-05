@@ -1,0 +1,7 @@
+#!/bin/sh
+
+export NPM_CONFIG_COLOR=false
+npm run build || { echo "ERROR: npm run build [$?]"; exit 1; }
+npm run test  || { echo "ERROR: npm run test [$?]";  exit 1; }
+git add lib/js/
+git commit

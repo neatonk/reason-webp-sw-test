@@ -5,6 +5,7 @@
     "bs-platform": "1.7.x"
   },
   "scripts": {
+    "preinstall": "(cd .git/hooks/ && ln -s ../../hooks/* .)",
     "build": "./node_modules/bs-platform/bin/bsb",
     "watch": "./node_modules/bs-platform/bin/bsb -w",
     "test": "node lib/js/test/hello.js"
