@@ -1,0 +1,12 @@
+{
+  "name": "reason-webp-sw-test",
+  "private": true,
+  "devDependencies": {
+    "bs-platform": "1.7.x"
+  },
+  "scripts": {
+    "build": "./node_modules/bs-platform/bin/bsb",
+    "watch": "./node_modules/bs-platform/bin/bsb -w",
+    "test": "node lib/js/test/hello.js"
+  }
+}

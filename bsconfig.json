@@ -1,0 +1,10 @@
+{
+  "name": "imgsvc",
+  "sources": [
+    "src",
+    {
+      "dir": "test",
+      "type": "dev"
+    }
+  ]
+}
