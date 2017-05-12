@@ -2,12 +2,14 @@
   "name": "reason-webp-sw-test",
   "private": true,
   "devDependencies": {
-    "bs-platform": "1.7.x"
+    "bs-platform": "1.7.x",
+    "http-server": "0.10.x"
   },
   "scripts": {
     "preinstall": "(cd .git/hooks/ && ln -s ../../hooks/* .)",
-    "build": "./node_modules/bs-platform/bin/bsb",
-    "watch": "./node_modules/bs-platform/bin/bsb -w",
+    "build": "bsb",
+    "watch": "bsb -w",
+    "serve": "http-server -o",
     "test": "node lib/js/test/hello.js"
   }
 }

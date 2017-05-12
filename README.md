@@ -4,6 +4,16 @@ This repo contains a test project implementing a service worker which intercepts
 image requests and returns WebP images where supported. This project was created
 to test the use of ReasonML to create a service worker script.
 
+## Demo
+
+```sh
+git clone git@github.com:neatonk/reason-webp-sw-test.git
+cd reason-webp-sw-test
+npm install
+npm run build
+npm run serve
+```
+
 ## Roadmap
 
 - Implement a P.O.C. service worker (in js) which intercepts image requests and
