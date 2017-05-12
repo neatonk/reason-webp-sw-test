@@ -7,8 +7,8 @@ to test the use of ReasonML to create a service worker script.
 ## Roadmap
 
 - Implement a minimal service worker (in js) which intercepts image requests,
-  calls a no-op function, and responds width the result.
-- Translate the minimla service worker impl. to reason OR define a simple
+  calls a no-op function, and responds with the result.
+- Translate the minimal service worker impl. to reason OR define a simple
   interface which can be used more easily used from reason code.
 - Replace the no-op function with a reason function which responds with a WebP
   image where supported.
