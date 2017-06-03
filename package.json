@@ -3,12 +3,16 @@
   "private": true,
   "devDependencies": {
     "bs-platform": "1.7.x",
-    "http-server": "0.10.x"
+    "http-server": "0.10.x",
+    "rollup": "^0.41.6",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-watch": "^3.2.2"
   },
   "scripts": {
     "preinstall": "(cd .git/hooks/ && ln -s ../../hooks/* .)",
-    "build": "bsb",
-    "watch": "bsb -w",
+    "build": "bsb -make-world && rollup -c",
+    "watch": "bsb -make-world -w & rollup -c -w",
+    "clean": "bsb -clean-world",
     "serve": "http-server -o",
     "test": "node lib/js/test/hello.js"
   }

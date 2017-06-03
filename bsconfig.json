@@ -1,10 +1,11 @@
 {
-  "name": "imgsvc",
+  "name": "reason-webp-sw-test",
   "sources": [
     "src",
     {
       "dir": "test",
       "type": "dev"
     }
-  ]
+  ],
+  "package-specs": ["es6"]
 }

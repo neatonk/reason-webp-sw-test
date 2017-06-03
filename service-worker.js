@@ -1,6 +1,7 @@
 "use strict";
 
-self.addEventListener('fetch', function(event) {
+//self.addEventListener('fetch', function(event) {
+self.onfetch = function(event) {
   if ( /\.jpg$/.test(event.request.url) ) {
     let req = event.request;
     let hdr = req.headers;
@@ -9,4 +10,4 @@ self.addEventListener('fetch', function(event) {
       event.respondWith(fetch(url, { mode: 'no-cors' }));
     }
   }
-});
+};

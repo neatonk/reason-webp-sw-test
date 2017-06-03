@@ -16,12 +16,13 @@ npm run serve
 
 ## Roadmap
 
-- [x] Implement a P.O.C. service worker (in js) which intercepts image requests and
-  responds with a WebP image where supported.
-- [ ] Translate the P.O.C service worker impl. to reason.
-- [ ] Download and cache a full-sized WebP image, resize according to the requested,
-  and respond with the result.
-- [ ] Partially download and cache the full-sized WebP image, resize and respond.
+- [x] Implement a P.O.C. service worker (in js) which intercepts image requests
+      and responds with a WebP image where supported.
+- [x] Translate the P.O.C service worker impl. to reason.
+- [ ] Download and cache a full-sized WebP image, resize according to the
+      request, and respond with the result.
+- [ ] Partially download and cache the full-sized WebP image, resize and
+      respond.
 - [ ] Resume cached partial response and update the cache as needed.
 - [ ] Optimize the request/resize/respond code path to minimize [TTFB][].
 
