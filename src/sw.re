@@ -7,8 +7,6 @@ module Header = {
 
 module Headers = {
   type t;
-  /* external get : string => option Header.t = "" [@@bs.send.pipe : t]; */
-  /* XXX TODO: Try bspack... This is more correct, but add `require` to output */
   external get : string => option Header.t =
     "" [@@bs.send.pipe : t] [@@bs.return null_undefined_to_opt];
 };
@@ -18,9 +16,8 @@ module Request = {
   external headers : t => Headers.t = "" [@@bs.get];
   external url : t => string = "" [@@bs.get];
   /* Helpers */
-  let get_header name req => req |> headers |> Headers.get name;
   let accepts mime req =>
-    switch (req |> get_header "accept") {
+    switch (req |> headers |> Headers.get "accept") {
     | None => false
     | Some hdr => Js.to_bool (Header.includes mime hdr)
     };
@@ -44,21 +41,19 @@ external onfetch : self => (FetchEvent.t => unit) => unit = "" [@@bs.set];
 
 external fetch : string => Js.t {. mode : string} => Response.t = "" [@@bs.val];
 
-let is_jpeg req => Js.Re.test (Request.url req) [%bs.re "/\\.jpe?g$/"];
-
-let replace_ext url ext => {
-  let idx = Js.String.lastIndexOf "." url;
-  Js.String.substring from::0 to_::idx url ^ "." ^ ext
-};
+let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
 
 onfetch
   self
   (
     fun evt => {
       let req = FetchEvent.request evt;
-      if (is_jpeg req && req |> Request.accepts "webp") {
-        let url = replace_ext (Request.url req) "webp";
-        evt |> FetchEvent.respondWith (fetch url {"mode": "no-cors"})
+      let url = Request.url req;
+      if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
+        evt |>
+        FetchEvent.respondWith (
+          fetch (Js.String.replaceByRe jpeg_ext_re ".webp" url) {"mode": "no-cors"}
+        )
       }
     }
   );
