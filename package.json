@@ -9,7 +9,6 @@
     "rollup-watch": "^3.2.2"
   },
   "scripts": {
-    "preinstall": "(cd .git/hooks/ && ln -s ../../hooks/* .)",
     "build": "bsb -make-world && rollup -c",
     "watch": "bsb -make-world -w & rollup -c -w",
     "clean": "bsb -clean-world",

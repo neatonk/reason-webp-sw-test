@@ -9,9 +9,7 @@ to test the use of ReasonML to create a service worker script.
 ```sh
 git clone git@github.com:neatonk/reason-webp-sw-test.git
 cd reason-webp-sw-test
-npm install
-npm run build
-npm run serve
+make && make serve
 ```
 
 ## Roadmap
