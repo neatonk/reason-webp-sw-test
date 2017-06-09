@@ -17,6 +17,5 @@ build: init; npm run build
 watch: init; npm run watch
 clean: init; npm run clean
 serve: init; npm run serve
-test:  init; npm run test
 
 .PHONY: default init build hooks build watch clean serve test

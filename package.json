@@ -12,7 +12,6 @@
     "build": "bsb -make-world && rollup -c",
     "watch": "bsb -make-world -w & rollup -c -w",
     "clean": "bsb -clean-world",
-    "serve": "http-server -o",
-    "test": "node lib/js/test/hello.js"
+    "serve": "http-server -o"
   }
 }

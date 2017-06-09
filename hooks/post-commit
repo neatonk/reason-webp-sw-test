@@ -1,7 +1,10 @@
 #!/bin/sh
 
+# Avoid nonsense in emacs buffer
 export NPM_CONFIG_COLOR=false
-npm run build || { echo "ERROR: npm run build [$?]"; exit 1; }
-npm run test  || { echo "ERROR: npm run test [$?]";  exit 1; }
-git add lib/js/
-git commit
+
+# Prompt to commit sw.js build target if changed
+if [ -n "$(git diff-index HEAD sw.js)" ]; then
+    git add sw.js
+    git commit -a
+fi

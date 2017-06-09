@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Avoid nonsense in emacs buffer
+export NPM_CONFIG_COLOR=false
+
+# Stash unstaged changes...
+STASH_NAME="pre-commit-$(date +%s)"
+git stash save -k -u $STASH_NAME
+
+# Try build and save exit code...
+(make build || { echo "ERROR: make build [$?]"; exit 1; })
+ERROR=$?
+
+# Restore unstaged changes from stash...
+STASHES=$(git stash list)
+if [[ $STASHES == "$STASH_NAME" ]]; then
+  git stash pop
+fi
+
+# Exit with result of build
+exit $ERROR;
