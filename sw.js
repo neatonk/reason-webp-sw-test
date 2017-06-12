@@ -24,17 +24,26 @@ function accepts(mime, req) {
 
 var jpeg_ext_re = (/\.jpe?g$/);
 
-self.onfetch = function (evt) {
-  var req = evt.request;
+function response(req) {
   var url = req.url;
-  if (jpeg_ext_re.test(url) && accepts("webp", req)) {
-    evt.respondWith(fetch(url.replace(jpeg_ext_re, ".webp"), {
-              mode: "no-cors"
-            }));
-    return /* () */0;
-  } else {
-    return 0;
-  }
+  return caches.match(req).then(function (x) {
+              if (is_nil_undef(x)) {
+                if (jpeg_ext_re.test(url) && accepts("webp", req)) {
+                  return fetch(url.replace(jpeg_ext_re, ".webp"), {
+                              mode: "no-cors"
+                            });
+                } else {
+                  return fetch(req);
+                }
+              } else {
+                return Promise.resolve(x);
+              }
+            });
+}
+
+self.onfetch = function (evt) {
+  evt.respondWith(response(evt.request));
+  return /* () */0;
 };
 
 
