@@ -29,6 +29,7 @@ module Request = {
 
 module Response = {
   type t;
+  external clone : t = "" [@@bs.send.pipe : t];
 };
 
 module FetchEvent = {
@@ -50,8 +51,16 @@ external fetchWithRequestInit :
   Request.t => RequestInit.t => Js.Promise.t Response.t =
   "fetch" [@@bs.val];
 
-module Caches = {
+module Cache = {
   type t;
+  external put : Request.t => Response.t => Js.Promise.t unit =
+    "" [@@bs.send.pipe : t];
+};
+
+module CacheStorage = {
+  type t;
+  external openCache : string => Js.Promise.t Cache.t =
+    "open" [@@bs.send.pipe : t];
   external matchReq :
     Request.t => Js.Promise.t (Js.Null_undefined.t Response.t) =
     "match" [@@bs.send.pipe : t];
@@ -63,27 +72,52 @@ external self : self = "" [@@bs.val];
 
 external onfetch : self => (FetchEvent.t => unit) => unit = "" [@@bs.set];
 
-external caches : Caches.t = "" [@@bs.val];
+external caches : CacheStorage.t = "" [@@bs.val];
 
 let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
 
-let response req => {
+let response_no_cache req => {
   let url = Request.url req;
-  caches |> Caches.matchReq req |>
-  Js.Promise.then_ (
-    fun x =>
-      switch (Js.Null_undefined.to_opt x) {
-      | Some res => Js.Promise.resolve res
-      | None =>
-        if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
-          fetchWithInit
-            (Js.String.replaceByRe jpeg_ext_re ".webp" url) {"mode": "no-cors"}
-        } else {
-          fetchWithRequest req
-        }
-      }
+  if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
+    fetchWithInit
+      (Js.String.replaceByRe jpeg_ext_re ".webp" url) {"mode": "no-cors"}
+  } else {
+    fetchWithRequest req
+  }
+};
+
+let cache_name = "v1";
+
+let cache_response req res => {
+  let resClone = res |> Response.clone;
+  /* XXX TODO check response.ok */
+  Js.Promise.(
+    caches |> CacheStorage.openCache cache_name |>
+    then_ (Cache.put req resClone) |>
+    then_ (fun _ => resolve res)
   )
 };
+
+let cache_and_respond req =>
+  response_no_cache req |> Js.Promise.then_ (cache_response req);
+
+let log_error_and_respond req err => {
+  Js.log err;
+  fetchWithRequest req
+};
+
+let response req =>
+  Js.Promise.(
+    caches |> CacheStorage.matchReq req |>
+    then_ (
+      fun x =>
+        switch (Js.Null_undefined.to_opt x) {
+        | Some res => resolve res
+        | None => cache_and_respond req
+        }
+    ) |>
+    catch (log_error_and_respond req)
+  );
 
 onfetch
   self

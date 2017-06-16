@@ -24,20 +24,39 @@ function accepts(mime, req) {
 
 var jpeg_ext_re = (/\.jpe?g$/);
 
-function response(req) {
+function response_no_cache(req) {
   var url = req.url;
+  if (jpeg_ext_re.test(url) && accepts("webp", req)) {
+    return fetch(url.replace(jpeg_ext_re, ".webp"), {
+                mode: "no-cors"
+              });
+  } else {
+    return fetch(req);
+  }
+}
+
+function response(req) {
   return caches.match(req).then(function (x) {
-              if (is_nil_undef(x)) {
-                if (jpeg_ext_re.test(url) && accepts("webp", req)) {
-                  return fetch(url.replace(jpeg_ext_re, ".webp"), {
-                              mode: "no-cors"
+                if (is_nil_undef(x)) {
+                  var req$1 = req;
+                  return response_no_cache(req$1).then(function (param) {
+                              var req$2 = req$1;
+                              var res = param;
+                              var resClone = res.clone();
+                              return caches.open("v1").then(function (param) {
+                                            return param.put(req$2, resClone);
+                                          }).then(function () {
+                                          return Promise.resolve(res);
+                                        });
                             });
                 } else {
-                  return fetch(req);
+                  return Promise.resolve(x);
                 }
-              } else {
-                return Promise.resolve(x);
-              }
+              }).catch(function (param) {
+              var req$1 = req;
+              var err = param;
+              console.log(err);
+              return fetch(req$1);
             });
 }
 
