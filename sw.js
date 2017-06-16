@@ -22,13 +22,26 @@ function accepts(mime, req) {
   }
 }
 
+function cache_response(req, res) {
+  var resClone = res.clone();
+  return caches.open("v1").then(function (param) {
+                return param.put(req, resClone);
+              }).then(function () {
+              return Promise.resolve(res);
+            });
+}
+
 var jpeg_ext_re = (/\.jpe?g$/);
 
 function response_no_cache(req) {
   var url = req.url;
   if (jpeg_ext_re.test(url) && accepts("webp", req)) {
-    return fetch(url.replace(jpeg_ext_re, ".webp"), {
-                mode: "no-cors"
+    var new_url = url.replace(jpeg_ext_re, ".webp");
+    var partial_arg = new Request(new_url);
+    return fetch(new_url, {
+                  mode: "no-cors"
+                }).then(function (param) {
+                return cache_response(partial_arg, param);
               });
   } else {
     return fetch(req);
@@ -40,14 +53,7 @@ function response(req) {
                 if (is_nil_undef(x)) {
                   var req$1 = req;
                   return response_no_cache(req$1).then(function (param) {
-                              var req$2 = req$1;
-                              var res = param;
-                              var resClone = res.clone();
-                              return caches.open("v1").then(function (param) {
-                                            return param.put(req$2, resClone);
-                                          }).then(function () {
-                                          return Promise.resolve(res);
-                                        });
+                              return cache_response(req$1, param);
                             });
                 } else {
                   return Promise.resolve(x);

@@ -18,6 +18,7 @@ module RequestInit = {
 module Request = {
   type t;
   external headers : t => Headers.t = "" [@@bs.get];
+  external create : string => t = "Request" [@@bs.new];
   external url : t => string = "" [@@bs.get];
   /* Helpers */
   let accepts mime req =>
@@ -74,18 +75,6 @@ external onfetch : self => (FetchEvent.t => unit) => unit = "" [@@bs.set];
 
 external caches : CacheStorage.t = "" [@@bs.val];
 
-let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
-
-let response_no_cache req => {
-  let url = Request.url req;
-  if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
-    fetchWithInit
-      (Js.String.replaceByRe jpeg_ext_re ".webp" url) {"mode": "no-cors"}
-  } else {
-    fetchWithRequest req
-  }
-};
-
 let cache_name = "v1";
 
 let cache_response req res => {
@@ -96,6 +85,19 @@ let cache_response req res => {
     then_ (Cache.put req resClone) |>
     then_ (fun _ => resolve res)
   )
+};
+
+let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
+
+let response_no_cache req => {
+  let url = Request.url req;
+  if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
+    let new_url = Js.String.replaceByRe jpeg_ext_re ".webp" url;
+    fetchWithInit new_url {"mode": "no-cors"} |>
+    Js.Promise.then_ (cache_response (Request.create new_url))
+  } else {
+    fetchWithRequest req
+  }
 };
 
 let cache_and_respond req =>
