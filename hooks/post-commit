@@ -6,5 +6,5 @@ export NPM_CONFIG_COLOR=false
 # Prompt to commit sw.js build target if changed
 if [ -n "$(git diff-index HEAD sw.js)" ]; then
     git add sw.js
-    git commit -a
+    git commit --amend
 fi

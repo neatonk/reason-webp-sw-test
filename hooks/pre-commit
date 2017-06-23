@@ -3,19 +3,25 @@
 # Avoid nonsense in emacs buffer
 export NPM_CONFIG_COLOR=false
 
-# Stash unstaged changes...
-STASH_NAME="pre-commit-$(date +%s)"
-git stash save -k -u $STASH_NAME
+# First, stash index and work dir, keeping only the
+# to-be-committed changes in the working directory.
+old_stash=$(git rev-parse -q --verify refs/stash)
+git stash save -k -u
+new_stash=$(git rev-parse -q --verify refs/stash)
+
+# If there were no changes then nothing was stashed and we can just exit.
+if [ "$old_stash" = "$new_stash" ]; then
+    echo "pre-commit script: no changes to test"
+    sleep 1 # XXX hack, editor may erase message
+    exit 0
+fi
 
 # Try build and save exit code...
 (make build || { echo "ERROR: make build [$?]"; exit 1; })
-ERROR=$?
+status=$?
 
-# Restore unstaged changes from stash...
-STASHES=$(git stash list)
-if [[ $STASHES == "$STASH_NAME" ]]; then
-  git stash pop
-fi
+# Restore changes
+git stash pop --index
 
-# Exit with result of build
-exit $ERROR;
+# Exit with build status: nonzero prevents commit
+exit $status
