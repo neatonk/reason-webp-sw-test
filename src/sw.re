@@ -89,7 +89,7 @@ let cache_response req res => {
 
 let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
 
-let response_no_cache req => {
+let respond req => {
   let url = Request.url req;
   if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
     let new_url = Js.String.replaceByRe jpeg_ext_re ".webp" url;
@@ -101,14 +101,14 @@ let response_no_cache req => {
 };
 
 let cache_and_respond req =>
-  response_no_cache req |> Js.Promise.then_ (cache_response req);
+  respond req |> Js.Promise.then_ (cache_response req);
 
 let log_error_and_respond req err => {
   Js.log err;
   fetchWithRequest req
 };
 
-let response req =>
+let app req =>
   Js.Promise.(
     caches |> CacheStorage.matchReq req |>
     then_ (
@@ -124,6 +124,5 @@ let response req =>
 onfetch
   self
   (
-    fun evt =>
-      evt |> FetchEvent.respondWith (evt |> FetchEvent.request |> response)
+    fun evt => evt |> FetchEvent.respondWith (evt |> FetchEvent.request |> app)
   );

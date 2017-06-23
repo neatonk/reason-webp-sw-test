@@ -33,7 +33,7 @@ function cache_response(req, res) {
 
 var jpeg_ext_re = (/\.jpe?g$/);
 
-function response_no_cache(req) {
+function respond(req) {
   var url = req.url;
   if (jpeg_ext_re.test(url) && accepts("webp", req)) {
     var new_url = url.replace(jpeg_ext_re, ".webp");
@@ -48,11 +48,11 @@ function response_no_cache(req) {
   }
 }
 
-function response(req) {
+function app(req) {
   return caches.match(req).then(function (x) {
                 if (is_nil_undef(x)) {
                   var req$1 = req;
-                  return response_no_cache(req$1).then(function (param) {
+                  return respond(req$1).then(function (param) {
                               return cache_response(req$1, param);
                             });
                 } else {
@@ -67,7 +67,7 @@ function response(req) {
 }
 
 self.onfetch = function (evt) {
-  evt.respondWith(response(evt.request));
+  evt.respondWith(app(evt.request));
   return /* () */0;
 };
 
