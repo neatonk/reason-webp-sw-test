@@ -28,9 +28,15 @@ module Request = {
     };
 };
 
+module Blob = {
+  type t;
+};
+
 module Response = {
   type t;
   external clone : t = "" [@@bs.send.pipe : t];
+  external blob : Js.Promise.t Blob.t = "" [@@bs.send.pipe : t];
+  external of_blob : Blob.t => t = "Response" [@@bs.new];
 };
 
 module FetchEvent = {
@@ -75,6 +81,8 @@ external onfetch : self => (FetchEvent.t => unit) => unit = "" [@@bs.set];
 
 external caches : CacheStorage.t = "" [@@bs.val];
 
+external parseInt : string => _ [@bs.as 10] => int = "" [@@bs.val];
+
 let cache_name = "v1";
 
 let cache_response req res => {
@@ -87,18 +95,53 @@ let cache_response req res => {
   )
 };
 
-let jpeg_ext_re = [%bs.re "/\\.jpe?g$/"];
+let fetch_no_resize url =>
+  fetchWithInit url {"mode": "no-cors"} |>
+  Js.Promise.then_ (cache_response (Request.create url));
 
-let respond req => {
-  let url = Request.url req;
-  if (Js.Re.test url jpeg_ext_re && req |> Request.accepts "webp") {
-    let new_url = Js.String.replaceByRe jpeg_ext_re ".webp" url;
-    fetchWithInit new_url {"mode": "no-cors"} |>
-    Js.Promise.then_ (cache_response (Request.create new_url))
-  } else {
-    fetchWithRequest req
-  }
+let resize_blob _ blob => blob; /* XXX TODO */
+
+let fetch_and_resize url width =>
+  Js.Promise.(
+    fetch_no_resize url |> then_ Response.blob |>
+    then_ (fun blob => resolve (blob |> resize_blob width |> Response.of_blob))
+  );
+
+let jpeg_url_re = [%bs.re "/^(.+)\\.jpe?g(?:\\/([0-9]+))?$/"];
+
+module Action = {
+  type url = string;
+  type width = int;
+  type action =
+    | Resize url width
+    | NoResize url
+    | None;
+  let match_ req => {
+    let url = Request.url req;
+    if (req |> Request.accepts "webp") {
+      switch (url |> Js.String.match_ jpeg_url_re) {
+      | Some [|_, u, w|] =>
+        let new_url = u ^ ".webp";
+        if (not (Js.Undefined.testAny w)) {
+          Resize new_url (parseInt w)
+        } else {
+          NoResize new_url
+        }
+      | Some _ => None
+      | None => None
+      }
+    } else {
+      None
+    }
+  };
 };
+
+let respond req =>
+  switch (Action.match_ req) {
+  | Resize url width => fetch_and_resize url width
+  | NoResize url => fetch_no_resize url
+  | None => fetchWithRequest req
+  };
 
 let cache_and_respond req =>
   respond req |> Js.Promise.then_ (cache_response req);

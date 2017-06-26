@@ -18,7 +18,7 @@ make && make serve
       and responds with a WebP image where supported.
 - [x] Translate the P.O.C service worker impl. to reason.
 - [x] Cache response and respond from caches if already cached.
-- [ ] Download and cache a full-sized WebP image, resize according to the
+- [-] Download and cache a full-sized WebP image, resize according to the
       request, and respond with the result.
 - [ ] Partially download and cache the full-sized WebP image, resize and
       respond.

@@ -1,6 +1,14 @@
 (function () {
 'use strict';
 
+function __(tag, block) {
+  block.tag = tag;
+  return block;
+}
+
+
+/* No side effect */
+
 function is_nil_undef(x) {
   if (x === null) {
     return /* true */1;
@@ -31,20 +39,58 @@ function cache_response(req, res) {
             });
 }
 
-var jpeg_ext_re = (/\.jpe?g$/);
+function fetch_no_resize(url) {
+  var partial_arg = new Request(url);
+  return fetch(url, {
+                mode: "no-cors"
+              }).then(function (param) {
+              return cache_response(partial_arg, param);
+            });
+}
+
+var jpeg_url_re = (/^(.+)\.jpe?g(?:\/([0-9]+))?$/);
+
+function match_(req) {
+  var url = req.url;
+  if (accepts("webp", req)) {
+    var match = url.match(jpeg_url_re);
+    if (match !== null) {
+      if (match.length !== 3) {
+        return /* None */0;
+      } else {
+        var u = match[1];
+        var w = match[2];
+        var new_url = u + ".webp";
+        if (w !== undefined) {
+          return /* Resize */__(0, [
+                    new_url,
+                    parseInt(w, 10)
+                  ]);
+        } else {
+          return /* NoResize */__(1, [new_url]);
+        }
+      }
+    } else {
+      return /* None */0;
+    }
+  } else {
+    return /* None */0;
+  }
+}
 
 function respond(req) {
-  var url = req.url;
-  if (jpeg_ext_re.test(url) && accepts("webp", req)) {
-    var new_url = url.replace(jpeg_ext_re, ".webp");
-    var partial_arg = new Request(new_url);
-    return fetch(new_url, {
-                  mode: "no-cors"
-                }).then(function (param) {
-                return cache_response(partial_arg, param);
-              });
-  } else {
+  var match = match_(req);
+  if (typeof match === "number") {
     return fetch(req);
+  } else if (match.tag) {
+    return fetch_no_resize(match[0]);
+  } else {
+    var url = match[0];
+    return fetch_no_resize(url).then(function (prim) {
+                  return prim.blob();
+                }).then(function (blob) {
+                return Promise.resolve(new Response(blob));
+              });
   }
 }
 
@@ -72,6 +118,6 @@ self.onfetch = function (evt) {
 };
 
 
-/* jpeg_ext_re Not a pure module */
+/* jpeg_url_re Not a pure module */
 
 }());
